@@ -22,7 +22,7 @@ class SQLiteManager(context: Context?) :
             .append(NAME_COL)
             .append(" TEXT, ")
             .append(COLOR_COL)
-            .append(" TEXT)")
+            .append(" INTEGER)")
         sqLiteDatabase.execSQL(sql.toString())
 
         val sql2: StringBuilder = StringBuilder()
@@ -41,7 +41,7 @@ class SQLiteManager(context: Context?) :
     }
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
 
-    fun createField(name: String, color: String, points: ArrayList<Point>): Int {
+    fun createField(name: String, color: Int, points: ArrayList<Point>): Int {
         val sqLiteDatabase = this.writableDatabase
 
         val contentValues = ContentValues()
@@ -78,10 +78,10 @@ class SQLiteManager(context: Context?) :
                 while (result.moveToNext()) {
                     val id = result.getInt(0)
                     val name = result.getString(1)
-                    val color = result.getString(2)
+                    val color = result.getInt(2)
 
                     val points = getPoints(id)
-                    val field = Field(id, points, name, color)
+                    val field = Field(id, points, color, name)
 
                     Field.list.add(field)
                 }

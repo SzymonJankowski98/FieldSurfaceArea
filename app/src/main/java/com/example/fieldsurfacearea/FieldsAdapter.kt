@@ -17,10 +17,10 @@ class FieldAdapter(context: Context, fields: List<Field>) : ArrayAdapter<Field>(
         val field = getItem(position) ?: return view
 
         val fieldName = view.findViewById<TextView>(R.id.fieldName)
-        val fieldColor = view.findViewById<TextView>(R.id.fieldColor)
+        val fieldColor = view.findViewById<View>(R.id.backgroundColor2)
 
         fieldName.text = field.name
-        fieldColor.text = field.color
+        fieldColor.setBackgroundColor(field.color)
 
         val fieldsListBtn = view.findViewById<Button>(R.id.deleteFieldBtn)
         fieldsListBtn.setOnClickListener {

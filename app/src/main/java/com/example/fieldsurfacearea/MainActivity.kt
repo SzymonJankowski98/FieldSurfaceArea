@@ -2,11 +2,17 @@ package com.example.fieldsurfacearea
 
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.DashPathEffect
+import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
+import android.view.PointerIcon
+import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import codewithcal.au.sqliteandroidstudiotutorial.SQLiteManager
 import org.osmdroid.api.IMapController
 import org.osmdroid.config.Configuration
@@ -15,6 +21,8 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
+import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.advancedpolyline.MonochromaticPaintList
 import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
@@ -23,6 +31,8 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private var mapMode = "preview"
         private lateinit var currentField: Field
+        private var polyline = Polyline()
+        private var polyline2 = Polyline()
 
         fun switchToPreview() {
             mapMode = "preview"
@@ -58,26 +68,48 @@ class MainActivity : AppCompatActivity() {
         val addFieldButton = findViewById<Button>(R.id.addFieldBtn)
         val cancelButton = findViewById<Button>(R.id.cancelBtn)
         val addPointButton = findViewById<Button>(R.id.addPointBtn)
+        val fieldsListBtn = findViewById<Button>(R.id.fieldsListBtn)
+        val currentLocationBtn = findViewById<Button>(R.id.currentLocation)
+        val point = findViewById<View>(R.id.point)
         addFieldButton.text = "Save"
-        cancelButton.visibility = android.view.View.VISIBLE
-        addPointButton.visibility = android.view.View.VISIBLE
+        cancelButton.visibility = View.VISIBLE
+        addPointButton.visibility = View.VISIBLE
+        fieldsListBtn.visibility = View.INVISIBLE
+        point.visibility = View.VISIBLE
+        currentLocationBtn.visibility = View.VISIBLE
 
         addPointButton.setOnClickListener {
             val currentCenter = mMap.mapCenter
             val latitude = currentCenter.latitude
             val longitude = currentCenter.longitude
 
-            Log.e("lat and long before", "$latitude $longitude")
             val point = Point(latitude, longitude)
             currentField.points.add(point)
-            drawMarker(GeoPoint(latitude, longitude))
+            refreshPolyline()
+            drawMarker(GeoPoint(latitude, longitude), customIcon = true)
         }
 
         addFieldButton.setOnClickListener {
-            currentField.save(this)
+            if (currentField.points.count() < 3) {
+                val duration = Toast.LENGTH_SHORT
+                val toast = Toast.makeText(this, "Add at least 3 points", duration)
+                toast.show()
+            } else {
+                currentField.save(this)
+                switchToPreview()
+                val intent = Intent(this, MainActivity::class.java)
+                startActivity(intent)
+            }
+        }
+
+        cancelButton.setOnClickListener {
             switchToPreview()
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
+        }
+
+        currentLocationBtn.setOnClickListener {
+
         }
     }
 
@@ -130,25 +162,68 @@ class MainActivity : AppCompatActivity() {
     private fun drawField(field: Field): Polygon {
         val polygon = Polygon()
         val geoPoints = ArrayList<GeoPoint>();
-        field.points.forEach { point ->
-            Log.e("lat and long after", "${point.latitude} ${point.longitude}")
-            geoPoints.add(GeoPoint(point.latitude, point.longitude))
+        field.points.forEachIndexed { index, point ->
+            val geoPoint = GeoPoint(point.latitude, point.longitude)
+            geoPoints.add(geoPoint)
+            if (index == 1) { drawMarker(geoPoint, field.name, "Surface area: ${field.surfaceAre()}") }
         }
         geoPoints.add(geoPoints.get(0))
-        polygon.fillPaint.color = Color.parseColor("red")
+        polygon.fillPaint.color = field.color
         polygon.setPoints(geoPoints)
         polygon.title = field.name
 
         return polygon
     }
 
-    private fun drawMarker(point: GeoPoint) {
+    private fun drawMarker(point: GeoPoint, title: String = "", snippet: String = "", customIcon: Boolean = false) {
         val marker = Marker(mMap)
         marker.position = point
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-        marker.title = "Marker Title"
+        marker.title = title
+        if (customIcon) {
+            marker.icon = ResourcesCompat.getDrawable(resources, R.drawable.pin, null)
+        }
+        marker.snippet = snippet
 
         mMap.overlays.add(marker)
+        mMap.invalidate()
+    }
+
+    private fun refreshPolyline() {
+        mMap.overlays.remove(polyline)
+        mMap.overlays.remove(polyline2)
+        polyline = Polyline()
+        polyline.color = currentField.color
+        polyline.width = 12f
+        polyline.color = currentField.color
+
+        currentField.points.forEach { point ->
+            val geoPoint = GeoPoint(point.latitude, point.longitude)
+            polyline.addPoint(geoPoint)
+        }
+
+        mMap.overlays.add(polyline)
+
+        if (currentField.points.count() < 3) { return }
+        polyline2 = Polyline()
+        val paint = Paint()
+        paint.color = Color.GRAY
+        paint.style = Paint.Style.STROKE
+        paint.isAntiAlias = true
+        polyline2.outlinePaintLists.add(MonochromaticPaintList(paint))
+
+        polyline2.color = currentField.color
+        polyline2.width = 25f
+
+        val firstPoint = currentField.points.first()
+        val geoPoint = GeoPoint(firstPoint.latitude, firstPoint.longitude)
+        polyline2.addPoint(geoPoint)
+
+        val lastPoint = currentField.points.last()
+        val geoPoint2 = GeoPoint(lastPoint.latitude, lastPoint.longitude)
+        polyline2.addPoint(geoPoint2)
+
+        mMap.overlays.add(polyline2)
         mMap.invalidate()
     }
 }
