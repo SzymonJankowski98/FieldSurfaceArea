@@ -6,13 +6,14 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.provider.ContactsContract.CommonDataKinds.Note
 import android.util.Log
+import com.example.fieldsurfacearea.Field
+import com.example.fieldsurfacearea.Point
 
 
 class SQLiteManager(context: Context?) :
     SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
     override fun onCreate(sqLiteDatabase: SQLiteDatabase) {
-        val sql: StringBuilder
-        sql = StringBuilder()
+        val sql: StringBuilder = StringBuilder()
             .append("CREATE TABLE ")
             .append(TABLE_NAME)
             .append("(")
@@ -24,8 +25,7 @@ class SQLiteManager(context: Context?) :
             .append(" TEXT)")
         sqLiteDatabase.execSQL(sql.toString())
 
-        val sql2: StringBuilder
-        sql2 = StringBuilder()
+        val sql2: StringBuilder = StringBuilder()
             .append("CREATE TABLE ")
             .append(TABLE_NAME2)
             .append("(")
@@ -39,9 +39,39 @@ class SQLiteManager(context: Context?) :
             .append(" FLOAT)")
         sqLiteDatabase.execSQL(sql2.toString())
     }
+    override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
 
-    fun getFields(): ArrayList<Int> {
-        var array: ArrayList<Int> = ArrayList<Int>()
+    fun createField(name: String, color: String, points: ArrayList<Point>): Int {
+        val sqLiteDatabase = this.writableDatabase
+
+        val contentValues = ContentValues()
+        contentValues.put(NAME_COL, name)
+        contentValues.put(COLOR_COL, color)
+
+        val fieldId = sqLiteDatabase.insert(TABLE_NAME, null, contentValues).toInt()
+        points.forEach { point -> createPoint(fieldId, point) }
+
+        return fieldId
+    }
+
+    fun createPoint(fieldId: Int, point: Point){
+        val sqLiteDatabase = this.writableDatabase
+
+        val contentValues = ContentValues()
+        contentValues.put(FIELD_ID_COL, fieldId)
+        contentValues.put(LATITUDE_COL, point.latitude)
+        contentValues.put(LONGITUDE_COL, point.longitude)
+
+        sqLiteDatabase.insert(TABLE_NAME2, null, contentValues)
+    }
+
+    fun deleteField(id: Int) {
+        val sqLiteDatabase = this.writableDatabase
+        sqLiteDatabase.delete(TABLE_NAME, "id = $id", null)
+    }
+
+    fun populateFieldsList() {
+        Field.list.clear()
         val sqLiteDatabase = this.readableDatabase
         sqLiteDatabase.rawQuery("SELECT * FROM $TABLE_NAME", null).use { result ->
             if (result.count != 0) {
@@ -49,27 +79,33 @@ class SQLiteManager(context: Context?) :
                     val id = result.getInt(0)
                     val name = result.getString(1)
                     val color = result.getString(2)
-                    array.add(id)
+
+                    val points = getPoints(id)
+                    val field = Field(id, points, name, color)
+
+                    Field.list.add(field)
+                }
+            }
+        }
+    }
+
+    private fun getPoints(fieldId: Int): ArrayList<Point> {
+        val points = ArrayList<Point>()
+        val sqLiteDatabase = this.readableDatabase
+        sqLiteDatabase.rawQuery("SELECT * FROM $TABLE_NAME2 WHERE field_id = $fieldId", null).use { result ->
+            if (result.count != 0) {
+                while (result.moveToNext()) {
+                    val latitude = result.getFloat(1)
+                    val longitude = result.getFloat(2)
+                    val point = Point(latitude, longitude)
+
+                    points.add(point)
                 }
             }
         }
 
-        return array
+        return points
     }
-
-    fun createField() {
-        Log.e("TAG", "createField")
-
-        val sqLiteDatabase = this.writableDatabase
-
-        val contentValues = ContentValues()
-        contentValues.put(NAME_COL, "test name")
-        contentValues.put(COLOR_COL, "#FFFFFF")
-
-        sqLiteDatabase.insert(TABLE_NAME, null, contentValues)
-    }
-
-    override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
 
     companion object {
         private var sqLiteManager: SQLiteManager? = null

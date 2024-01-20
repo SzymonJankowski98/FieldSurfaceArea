@@ -21,6 +21,9 @@
         android:theme="@style/Theme.FieldSurfaceArea"
         tools:targetApi="31">
         <activity
+            android:name=".AddField"
+            android:exported="false" />
+        <activity
             android:name=".FieldsList"
             android:exported="false"
             android:label="@string/title_activity_fields_list"
