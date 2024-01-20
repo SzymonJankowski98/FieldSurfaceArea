@@ -1,17 +1,25 @@
 package com.example.fieldsurfacearea
 
+import android.Manifest
+import android.Manifest.permission.ACCESS_COARSE_LOCATION
+import android.Manifest.permission.ACCESS_FINE_LOCATION
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.DashPathEffect
 import android.graphics.Paint
 import android.graphics.Rect
+import android.location.LocationListener
+import android.location.LocationManager
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
-import android.view.PointerIcon
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import codewithcal.au.sqliteandroidstudiotutorial.SQLiteManager
 import org.osmdroid.api.IMapController
@@ -27,12 +35,15 @@ import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
 
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), LocationListener {
     companion object {
         private var mapMode = "preview"
         private lateinit var currentField: Field
         private var polyline = Polyline()
         private var polyline2 = Polyline()
+        private var currentLatitude = 0.0
+        private var currentLongitude = 0.0
+        lateinit var locationManager: LocationManager
 
         fun switchToPreview() {
             mapMode = "preview"
@@ -62,6 +73,8 @@ class MainActivity : AppCompatActivity() {
             "preview" -> initializePreview()
             "createField" -> initializeCreateField()
         }
+
+        getLocation()
     }
 
     private fun initializeCreateField() {
@@ -109,7 +122,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         currentLocationBtn.setOnClickListener {
+            val point = Point(currentLatitude, currentLongitude)
+            currentField.points.add(point)
 
+            refreshPolyline()
+            drawMarker(GeoPoint(currentLatitude, currentLongitude), customIcon = true)
         }
     }
 
@@ -138,7 +155,6 @@ class MainActivity : AppCompatActivity() {
         controller = mMap.controller
 
         mMyLocationOverlay.enableMyLocation()
-        mMyLocationOverlay.enableFollowLocation()
         mMyLocationOverlay.isDrawAccuracyEnabled = true
         mMyLocationOverlay.runOnFirstFix {
             runOnUiThread {
@@ -225,5 +241,23 @@ class MainActivity : AppCompatActivity() {
 
         mMap.overlays.add(polyline2)
         mMap.invalidate()
+    }
+
+    private fun getLocation() {
+        locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        if ((ContextCompat.checkSelfPermission(this, ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)) {
+            ActivityCompat.requestPermissions(this, arrayOf(ACCESS_FINE_LOCATION), 2)
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5f, this)
+    }
+
+    override fun onLocationChanged(location: Location) {
+        currentLongitude = location.longitude
+        currentLatitude = location.latitude
+        Log.e("current location", "Latitude: " + location.latitude + " , Longitude: " + location.longitude)
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 }
