@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.ListView
 import android.widget.TextView
 
 class FieldAdapter(context: Context, fields: List<Field>) : ArrayAdapter<Field>(context, 0, fields) {
@@ -22,7 +23,10 @@ class FieldAdapter(context: Context, fields: List<Field>) : ArrayAdapter<Field>(
         fieldColor.text = field.color
 
         val fieldsListBtn = view.findViewById<Button>(R.id.deleteFieldBtn)
-        fieldsListBtn.setOnClickListener { Field.delete(field.id, context) }
+        fieldsListBtn.setOnClickListener {
+            Field.delete(field.id, context)
+            FieldsList.fieldsAdapter.notifyDataSetChanged()
+        }
 
         return view
     }

@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun initializeCreateField() {
+    private fun initializeCreateField() {
         val addFieldButton = findViewById<Button>(R.id.addFieldBtn)
         val cancelButton = findViewById<Button>(R.id.cancelBtn)
         val addPointButton = findViewById<Button>(R.id.addPointBtn)
@@ -67,7 +67,8 @@ class MainActivity : AppCompatActivity() {
             val latitude = currentCenter.latitude
             val longitude = currentCenter.longitude
 
-            val point = Point(latitude.toFloat(), longitude.toFloat())
+            Log.e("lat and long before", "$latitude $longitude")
+            val point = Point(latitude, longitude)
             currentField.points.add(point)
             drawMarker(GeoPoint(latitude, longitude))
         }
@@ -80,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun initializePreview() {
+    private fun initializePreview() {
         val fieldsListBtn = findViewById<Button>(R.id.fieldsListBtn)
         fieldsListBtn.setOnClickListener {
             val intent = Intent(this, FieldsList::class.java)
@@ -94,7 +95,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun initializeMap() {
+    private fun initializeMap() {
         mMap = findViewById(R.id.osmmap)
         mMap.setTileSource(TileSourceFactory.MAPNIK)
         mMap.mapCenter
@@ -119,17 +120,8 @@ class MainActivity : AppCompatActivity() {
         Log.e("TAG", "onCreate:in ${controller.zoomIn()}")
         Log.e("TAG", "onCreate: out  ${controller.zoomOut()}")
 
-        val point1 = Point(30.1f, 22.5f)
-        val point2 = Point(10.1f, 61.1f)
-        val point3 = Point(22.1f, 90.1f)
-        val point4 = Point(50.1f, 70.1f)
-
-//        Field.create("Field1", "Red", arrayOf(point1, point2, point3, point4), this)
-
         Field.list.forEach { field ->
-            Log.e("draw field", field.points.isEmpty().toString())
             if (field.points.isEmpty()) return@forEach
-            Log.e("field with points", field.points.count().toString())
             val polygon = drawField(field)
             mMap.overlays.add(polygon)
         }
@@ -139,7 +131,8 @@ class MainActivity : AppCompatActivity() {
         val polygon = Polygon()
         val geoPoints = ArrayList<GeoPoint>();
         field.points.forEach { point ->
-            geoPoints.add(GeoPoint(point.latitude.toDouble(), point.longitude.toDouble()))
+            Log.e("lat and long after", "${point.latitude} ${point.longitude}")
+            geoPoints.add(GeoPoint(point.latitude, point.longitude))
         }
         geoPoints.add(geoPoints.get(0))
         polygon.fillPaint.color = Color.parseColor("red")

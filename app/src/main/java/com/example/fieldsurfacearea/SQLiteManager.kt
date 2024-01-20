@@ -34,9 +34,9 @@ class SQLiteManager(context: Context?) :
             .append(FIELD_ID_COL)
             .append(" INTEGER, ")
             .append(LATITUDE_COL)
-            .append(" FLOAT, ")
+            .append(" DOUBLE, ")
             .append(LONGITUDE_COL)
-            .append(" FLOAT)")
+            .append(" DOUBLE)")
         sqLiteDatabase.execSQL(sql2.toString())
     }
     override fun onUpgrade(sqLiteDatabase: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
@@ -95,8 +95,8 @@ class SQLiteManager(context: Context?) :
         sqLiteDatabase.rawQuery("SELECT * FROM $TABLE_NAME2 WHERE field_id = $fieldId", null).use { result ->
             if (result.count != 0) {
                 while (result.moveToNext()) {
-                    val latitude = result.getFloat(1)
-                    val longitude = result.getFloat(2)
+                    val latitude = result.getDouble(2)
+                    val longitude = result.getDouble(3)
                     val point = Point(latitude, longitude)
 
                     points.add(point)
