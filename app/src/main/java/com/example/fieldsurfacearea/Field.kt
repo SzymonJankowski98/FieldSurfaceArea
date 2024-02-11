@@ -2,6 +2,8 @@ package com.example.fieldsurfacearea
 
 import android.content.Context
 import codewithcal.au.sqliteandroidstudiotutorial.SQLiteManager
+import com.mobile.areacounter.geometry.MatPoint
+import com.mobile.areacounter.geometry.Vector
 
 class Field(var id: Int, val points: ArrayList<Point>, val color: Int, val name: String) {
     companion object {
@@ -24,7 +26,14 @@ class Field(var id: Int, val points: ArrayList<Point>, val color: Int, val name:
     }
 
     fun surfaceAre(): Double {
-        // TODO Implement calculations
-        return 100.35
+        val matPoints = points.map { MatPoint(it.latitude, it.longitude)}
+        val matPointWithoutFirst = matPoints.subList(1, matPoints.size)
+
+        val vectors = matPoints.zip(matPointWithoutFirst)
+            .map { Vector(it.first, it.second) }
+            .toMutableList()
+            .add(Vector(matPoints.last(), matPoints.last()))
+
+        return 123.0//Polygon(vectors).
     }
 }

@@ -4,8 +4,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
-import android.provider.ContactsContract.CommonDataKinds.Note
-import android.util.Log
 import com.example.fieldsurfacearea.Field
 import com.example.fieldsurfacearea.Point
 
