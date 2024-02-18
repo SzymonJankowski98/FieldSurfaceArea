@@ -5,8 +5,11 @@ import com.example.fieldsurfacearea.geometry.Line
 import kotlin.math.acos
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.random.Random
 
 object GeometryHelper {
+    val random = Random
+
     fun calculateAngle(firstVector: Vector, secondVector: Vector) : Double {
         val firstVectorCommonStart = MatPoint(
             firstVector.finishingPoint.x - firstVector.startingPoint.x,
@@ -47,7 +50,7 @@ object GeometryHelper {
                 (!v1.isVertical() && !v1.isLeftToRight() && Line.fromVector(v1).isGreaterThan(v2.finishingPoint))
     }
 
-    fun toMatPoint(startingPoint: Point, finishingPoint: Point, matPointStart: MatPoint): MatPoint {
+    fun toMatPoint(startingPoint: Point, finishingPoint: Point): Vector {
         //val earthRadius = 6371
         val MEDIAN : Double = 20_000.0
         val EQUATOR : Double =  40_075.0
@@ -73,8 +76,32 @@ object GeometryHelper {
         val longitudeInKm = (EQUATOR / 2 * lonRadDif / Math.PI * Math.cos(avgLatitudeRad)) * longitudeDirection
         val latitudeInKm = (MEDIAN * latRadDif / Math.PI) * latitudeDirection
 
-        return MatPoint(
-            matPointStart.x + longitudeInKm,
-            matPointStart.y + latitudeInKm)
+        return Vector(
+            MatPoint(0.0,0.0),
+            MatPoint(longitudeInKm, latitudeInKm))
+    }
+
+    fun calculateMonteCarloArea(polygon: Polygon, probes : Int = 1000): Double {
+        val extremePoints = polygon.getExtremes()
+
+        var pointsInside = 0
+
+        for (index in 0..probes){
+            if (polygon.triangulate().filter {
+                    it.belongsToTriangle(
+                        MatPoint(
+                            random.nextDouble(extremePoints.xMin, extremePoints.xMax),
+                            random.nextDouble(extremePoints.yMin, extremePoints.yMax)
+                        )
+                    )
+                }.toSet().isNotEmpty()){
+                pointsInside += 1
+            }
+        }
+        val squareX = extremePoints.xMax - extremePoints.xMin
+        val squareY = extremePoints.yMax - extremePoints.yMin
+        val squareArea = squareX * squareY
+
+        return squareArea * pointsInside / probes
     }
 }

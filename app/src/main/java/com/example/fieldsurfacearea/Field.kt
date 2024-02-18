@@ -2,7 +2,8 @@ package com.example.fieldsurfacearea
 
 import android.content.Context
 import codewithcal.au.sqliteandroidstudiotutorial.SQLiteManager
-import com.mobile.areacounter.geometry.MatPoint
+import com.mobile.areacounter.geometry.GeometryHelper
+import com.mobile.areacounter.geometry.Polygon
 import com.mobile.areacounter.geometry.Vector
 
 class Field(var id: Int, val points: ArrayList<Point>, val color: Int, val name: String) {
@@ -26,14 +27,19 @@ class Field(var id: Int, val points: ArrayList<Point>, val color: Int, val name:
     }
 
     fun surfaceAre(): Double {
-        val matPoints = points.map { MatPoint(it.latitude, it.longitude)}
-        val matPointWithoutFirst = matPoints.subList(1, matPoints.size)
+        val pointsOffsetOne = listOf<Point>(*points.toTypedArray(), points[0])
+            .subList(1, points.size + 1)
 
-        val vectors = matPoints.zip(matPointWithoutFirst)
-            .map { Vector(it.first, it.second) }
-            .toMutableList()
-            .add(Vector(matPoints.last(), matPoints.last()))
+        val vectors = points.zip(pointsOffsetOne)
+            .map { GeometryHelper.toMatPoint(it.first, it.second) }.toList()
 
-        return 123.0//Polygon(vectors).
+        val aggregatedVectorList = vectors.map {sumPreviousVector(vectors.subList(0, vectors.indexOf(it) + 1))}
+
+        return GeometryHelper.calculateMonteCarloArea(Polygon(aggregatedVectorList))
+    }
+
+    private fun sumPreviousVector(partialVectors: List<Vector>): Vector {
+        val res =  partialVectors.reduce { acc, vector ->  acc.add(vector)}
+        return res
     }
 }

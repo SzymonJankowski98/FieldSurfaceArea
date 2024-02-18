@@ -59,7 +59,7 @@ class GeometryHelperTest {
         val p1 = Point(52.40011786947233, 16.92757883766644)
         val p2 = Point(52.39808579051751, 16.940756600530705)
 
-        val newPoint = GeometryHelper.toMatPoint(p1, p2, MatPoint(0.0, 0.0))
+        val newPoint = GeometryHelper.toMatPoint(p1, p2)
 
         println(newPoint)
 
@@ -72,9 +72,7 @@ class GeometryHelperTest {
         val hetmanska = Point(52.38027350956052, 16.942892887402508)
         val lechicka = Point(52.44321658480153, 16.909211658708813)
 
-        val newPoint = GeometryHelper.toMatPoint(hetmanska, lechicka, MatPoint(0.0, 0.0))
-
-        val newVector = Vector(MatPoint(0.0, 0.0), newPoint)
+        val newVector = GeometryHelper.toMatPoint(hetmanska, lechicka)
 
         println(newVector.getLength())
 
