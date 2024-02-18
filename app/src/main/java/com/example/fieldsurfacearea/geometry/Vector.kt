@@ -12,4 +12,8 @@ data class Vector(val startingPoint: MatPoint, val finishingPoint: MatPoint) {
     fun isVertical(): Boolean {
         return finishingPoint.x - startingPoint.x == 0.0
     }
+
+    fun getLength(): Double {
+        return Math.sqrt(Math.pow(finishingPoint.x - startingPoint.x, 2.0) + Math.pow(finishingPoint.y - startingPoint.x, 2.0))
+    }
 }
