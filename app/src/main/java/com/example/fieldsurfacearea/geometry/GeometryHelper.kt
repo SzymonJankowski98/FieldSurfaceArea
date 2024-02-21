@@ -86,8 +86,10 @@ object GeometryHelper {
 
         var pointsInside = 0
 
+        val setOfTriangles = polygon.triangulate()
+
         for (index in 0..probes){
-            if (polygon.triangulate().filter {
+            if (setOfTriangles.filter {
                     it.belongsToTriangle(
                         MatPoint(
                             random.nextDouble(extremePoints.xMin, extremePoints.xMax),
@@ -98,8 +100,8 @@ object GeometryHelper {
                 pointsInside += 1
             }
         }
-        val squareX = extremePoints.xMax - extremePoints.xMin
-        val squareY = extremePoints.yMax - extremePoints.yMin
+        val squareX = Math.abs(extremePoints.xMax - extremePoints.xMin)
+        val squareY = Math.abs(extremePoints.yMax - extremePoints.yMin)
         val squareArea = squareX * squareY
 
         return squareArea * pointsInside / probes

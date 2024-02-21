@@ -47,6 +47,19 @@ class Polygon(val vectors : List<Vector>) {
 
         val newPolygonVectors = vectors.filter { !setOf(cutVector1, cutVector2).contains(it) }.toMutableList()
 
+        if(newPolygonVectors.size == 2){
+            val pointList = setOf<MatPoint>(
+                newPolygonVectors[0].startingPoint,
+                newPolygonVectors[0].finishingPoint,
+                newPolygonVectors[1].startingPoint,
+                newPolygonVectors[1].finishingPoint).toList()
+
+            return setOf(
+                Triangle(cutVector1.startingPoint, cutVector1.finishingPoint, cutVector2.finishingPoint),
+                Triangle(pointList[0], pointList[1], pointList[2])
+            )
+        }
+
         val indexToInsert = newPolygonVectors.indexOf(newPolygonVectors.filter{it.finishingPoint == newVector.startingPoint}[0])
 
         newPolygonVectors.add(indexToInsert+1, newVector)
