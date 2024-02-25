@@ -1,7 +1,6 @@
 package com.example.fieldsurfacearea
 
-import android.Manifest
-import android.Manifest.permission.ACCESS_COARSE_LOCATION
+
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.content.Context
 import android.content.Intent
@@ -178,12 +177,12 @@ class MainActivity : AppCompatActivity(), LocationListener {
     private fun drawField(field: Field): Polygon {
         val polygon = Polygon()
         val geoPoints = ArrayList<GeoPoint>();
-        field.points.forEachIndexed { index, point ->
-            val geoPoint = GeoPoint(point.latitude, point.longitude)
-            geoPoints.add(geoPoint)
-            if (index == 1) { drawMarker(geoPoint, field.name, "Surface area: ${field.surfaceAre()}") }
-        }
-        geoPoints.add(geoPoints.get(0))
+        field.points.forEach{ geoPoints.add(GeoPoint(it.latitude, it.longitude))}
+
+        drawMarker(geoPoints.first(), field.name, "Surface area: ${field.surfaceAre()}")
+
+        geoPoints.add(geoPoints.first())
+
         polygon.fillPaint.color = field.color
         polygon.setPoints(geoPoints)
         polygon.title = field.name
